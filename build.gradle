@@ -75,6 +75,7 @@ bintray {
     publications = ["BintrayRelease"]
     pkg {
         repo = 'maven'
+        userOrg = 'ferustech'
         name = 'ConfigKeys'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/FerusTech/ConfigKeys.git'
@@ -98,15 +99,6 @@ publishing {
         }
     }
 }
-
-String getProjectProperty(String propertyName) {
-    String property = ""
-    if (hasProperty(propertyName)) {
-        property = this.properties[propertyName]
-    }
-    return property
-}
-
 
 build {
     dependsOn clean
@@ -132,11 +124,11 @@ bintrayUpload {
 class Version {
     String major, minor, revision
 
-    String getBuild() {
+    static String getBuild() {
         System.getenv("TRAVIS_BUILD_NUMBER") ?: System.getProperty("TRAVIS_BUILD_NUMBER") ?: "DEV"
     }
 
     String toString() {
-        "${major}.${minor}.${revision}_$build"
+        "${major}.${minor}.${revision}_" + getBuild()
     }
 }
