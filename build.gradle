@@ -1,0 +1,143 @@
+plugins {
+    id 'com.jfrog.bintray' version '1.7.2'
+    id 'java'
+    id 'maven'
+    id 'maven-publish'
+    id 'signing'
+    id 'com.github.ben-manes.versions' version '0.13.0'
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+}
+
+def versionObj = new Version(major: 1, minor: 0, revision: "0")
+
+group 'tech.ferus.util'
+archivesBaseName = "ConfigKeys"
+version = "$versionObj"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile "com.google.code.findbugs:jsr305:3.0.2"
+    compile "ninja.leaping.configurate:configurate-core:3.2"
+    compile "ninja.leaping.configurate:configurate-gson:3.2"
+    compile "ninja.leaping.configurate:configurate-hocon:3.2"
+    compile "ninja.leaping.configurate:configurate-json:3.2"
+    compile "ninja.leaping.configurate:configurate-yaml:3.2"
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    baseName = project.name
+    manifest {
+        attributes 'Implementation-Version': version
+    }
+}
+
+shadowJar {
+    classifier = "withDependencies"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+javadoc {
+    failOnError = false
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.2.1'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+bintray {
+    user = bintrayUsername
+    key = bintrayApiKey
+    publications = ["BintrayRelease"]
+    pkg {
+        repo = 'maven'
+        name = 'ConfigKeys'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/FerusTech/ConfigKeys.git'
+        publish = true
+        version {
+            name = project.version
+            released = new Date()
+        }
+    }
+}
+
+publishing {
+    publications {
+        BintrayRelease(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId archivesBaseName
+            version version
+            artifact javadocJar
+            artifact sourcesJar
+        }
+    }
+}
+
+String getProjectProperty(String propertyName) {
+    String property = ""
+    if (hasProperty(propertyName)) {
+        property = this.properties[propertyName]
+    }
+    return property
+}
+
+
+build {
+    dependsOn clean
+    dependsOn jar
+    dependsOn javadocJar
+    dependsOn sourcesJar
+    dependsOn shadowJar
+
+    jar.mustRunAfter clean
+    javadocJar.mustRunAfter jar
+    sourcesJar.mustRunAfter javadocJar
+    shadowJar.mustRunAfter sourcesJar
+}
+
+bintrayUpload {
+    dependsOn build
+
+    onlyIf { !getProjectProperty("bintrayUsername").empty }
+    onlyIf { !getProjectProperty("bintrayApiKey").empty }
+    onlyIf { System.getenv("BUILD_NUMBER") }
+}
+
+class Version {
+    String major, minor, revision
+
+    String getBuild() {
+        System.getenv("BUILD_NUMBER") ?: System.getProperty("BUILD_NUMBER") ?: "DEV"
+    }
+
+    String toString() {
+        "${major}.${minor}.${revision}_$build"
+    }
+}
