@@ -56,7 +56,9 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 javadoc {
     failOnError = false
-    options.memberLevel = JavadocMemberLevel.PUBLIC
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
+    options.memberLevel = JavadocMemberLevel.PRIVATE
 }
 
 artifacts {
