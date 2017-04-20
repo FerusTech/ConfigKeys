@@ -77,7 +77,7 @@ bintray {
     pkg {
         repo = 'maven'
         name = 'ConfigKeys'
-        licenses = ['Apache-2.0']
+        licenses = ['MIT']
         vcsUrl = 'https://github.com/FerusTech/ConfigKeys.git'
         publish = true
         version {
