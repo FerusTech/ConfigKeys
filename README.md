@@ -42,9 +42,9 @@ Maven
 </dependency>
 
 <repository>
-    <id>jcenter</id>
-    <name>jcenter-bintray</name>
-    <url>http://jcenter.bintray.com</url>
+    <id>ferustech-bintray</id>
+    <name>FerusTech-bintray</name>
+    <url>http://dl.bintray.com/ferustech/maven</url>
 </repository>
 ```
 
@@ -55,7 +55,9 @@ dependencies {
 }
 
 repositories {
-    jcenter()
+    maven {
+        url  "http://dl.bintray.com/ferustech/maven" 
+    }
 }
 ```
 
