@@ -62,7 +62,7 @@ repositories {
 Builds are distributed using JCenter's Bintray [ConfigKeys JCenter Bintray](https://bintray.com/ferustech/maven/configkeys/)
 
 ## Javadocs
-(I'm still working on a solution for this. <3)
+Can be located [here](https://ferustech.github.io/ConfigKeys/).
 
 ## Discord
 
@@ -76,4 +76,4 @@ Dependencies are managed automatically via Gradle. For a detailed list, view bel
 | Name | Version | Website | Repository |
 | ---- | ------- | ------- | ---------- |
 | FindBugs | 3.0.2 | http://findbugs.sourceforge.net/ | https://github.com/findbugsproject/findbugs |
-| Configurate | 3.2 | http://zml2008.github.io/ | https://github.com/zml2008/configurate
+| Configurate | 3.2 | http://zml2008.github.io/ | https://github.com/zml2008/configurate |
