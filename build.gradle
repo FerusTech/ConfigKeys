@@ -126,7 +126,7 @@ bintrayUpload {
 
     onlyIf { System.getenv("BINTRAY_USERNAME") }
     onlyIf { System.getenv("BINTRAY_KEY") }
-    onlyIf { System.getenv("BUILD_NUMBER") }
+    onlyIf { System.getenv("TRAVIS_BUILD_NUMBER") }
 }
 
 class Version {
