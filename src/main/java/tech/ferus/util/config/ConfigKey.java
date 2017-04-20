@@ -20,6 +20,7 @@
 package tech.ferus.util.config;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -94,7 +95,7 @@ public class ConfigKey<T> {
     @Nullable
     public T get(@Nullable final ConfigFile config, @Nullable final T def) {
         if (config == null) {
-            throw new IllegalStateException("Attempted to get \"" + String.join(".", this.key) + "\" from null ConfigFile.");
+            throw new IllegalStateException("Attempted to get \"" + String.join(".", Arrays.toString(this.key)) + "\" from null ConfigFile.");
         }
 
         try {
@@ -125,7 +126,7 @@ public class ConfigKey<T> {
      */
     public void set(@Nullable final ConfigFile config, @Nullable final T value) throws IOException {
         if (config == null) {
-            throw new IllegalStateException("Attempted to set \"" + String.join(".", this.key) + "\" to a null ConfigFile.");
+            throw new IllegalStateException("Attempted to set \"" + String.join(".", Arrays.toString(this.key)) + "\" to a null ConfigFile.");
         }
 
         config.getNode(this.key).setValue(value);
