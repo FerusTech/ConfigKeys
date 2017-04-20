@@ -88,6 +88,7 @@ public class ConfigKey<T> {
      *
      * <p>Additionally, this method will return a default value if none can be found for this key.</p>
      *
+     * @param config the {@link ConfigFile} to look through
      * @param def the default value to be returned if an existing value cannot be obtained
      * @return the value stored in configuration for this key, or default
      */
