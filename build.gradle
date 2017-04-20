@@ -70,8 +70,8 @@ task wrapper(type: Wrapper) {
 }
 
 bintray {
-    user = bintrayUsername
-    key = bintrayApiKey
+    user = System.getenv("BINTRAY_USERNAME")
+    key = System.getenv("BINTRAY_KEY")
     publications = ["BintrayRelease"]
     pkg {
         repo = 'maven'
@@ -124,8 +124,8 @@ build {
 bintrayUpload {
     dependsOn build
 
-    onlyIf { !getProjectProperty("bintrayUsername").empty }
-    onlyIf { !getProjectProperty("bintrayApiKey").empty }
+    onlyIf { System.getenv("BINTRAY_USERNAME") }
+    onlyIf { System.getenv("BINTRAY_KEY") }
     onlyIf { System.getenv("BUILD_NUMBER") }
 }
 
@@ -133,7 +133,7 @@ class Version {
     String major, minor, revision
 
     String getBuild() {
-        System.getenv("BUILD_NUMBER") ?: System.getProperty("BUILD_NUMBER") ?: "DEV"
+        System.getenv("TRAVIS_BUILD_NUMBER") ?: System.getProperty("TRAVIS_BUILD_NUMBER") ?: "DEV"
     }
 
     String toString() {

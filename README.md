@@ -1,4 +1,4 @@
-# ConfigKeys
+# ConfigKeys [![Build Status](https://travis-ci.org/FerusTech/ConfigKeys.svg?branch=master)](https://travis-ci.org/FerusTech/ConfigKeys)
 ConfigKeys is a simple wrapper for zml's [Configurate](https://github.com/zml2008/configurate), providing a more stream-lined way to access configuration on-the-fly.
 
 ## Using ConfigKeys
