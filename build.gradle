@@ -27,15 +27,14 @@ private static String getGitHash() {
 }
 
 group 'tech.ferus.util'
+version = '1.0.1'
 archivesBaseName = "ConfigKeys"
-version = '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
