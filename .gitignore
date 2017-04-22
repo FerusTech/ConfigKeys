@@ -158,7 +158,6 @@ gradle-app.setting
 ## Custom ##
 run/
 .idea/
-gradle.properties
 
 ## Suck My Dick Windows ##
 Thumbs.db
