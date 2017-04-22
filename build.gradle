@@ -1,22 +1,40 @@
 plugins {
-    id 'com.jfrog.bintray' version '1.7.2'
     id 'java'
     id 'maven'
-    id 'maven-publish'
-    id 'com.github.ben-manes.versions' version '0.13.0'
+    id 'signing'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
 }
 
-def versionObj = new Version(major: 1, minor: 0, revision: "0")
+def sonatypeUsername = ""
+def sonatypePassword = ""
+
+if (System.getenv("SIGN_ID")) {
+    sonatypeUsername = System.getenv("SON_USR")
+    sonatypePassword = System.getenv("SON_PAS")
+
+    project.setProperty("signing.keyId", System.getenv("SIGN_ID"))
+    project.setProperty("signing.password", System.getenv("SIGN_PASS"))
+}
+
+ext {
+    gitHash = getGitHash()
+}
+
+private static String getGitHash() {
+    def process = 'git rev-parse --short HEAD'.execute()
+    process.waitFor()
+    return process.exitValue() ? 'unknown' : process.text.trim()
+}
 
 group 'tech.ferus.util'
 archivesBaseName = "ConfigKeys"
-version = "$versionObj"
+version = '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
@@ -34,14 +52,17 @@ compileJava {
 }
 
 jar {
-    baseName = project.name
     manifest {
-        attributes 'Implementation-Version': version
+        attributes(
+                'Implementation-Title': project.name,
+                'Implementation-Version': version,
+                'Build-Version': gitHash
+        )
     }
 }
 
 shadowJar {
-    classifier = "withDependencies"
+    classifier = "shaded"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -62,44 +83,15 @@ javadoc {
 }
 
 artifacts {
+    archives jar
     archives sourcesJar
     archives javadocJar
+    archives shadowJar
 }
 
 task wrapper(type: Wrapper) {
     gradleVersion = '3.2.1'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
-}
-
-bintray {
-    user = System.getenv("BINTRAY_USERNAME")
-    key = System.getenv("BINTRAY_KEY")
-    publications = ["BintrayRelease"]
-    pkg {
-        repo = 'maven'
-        userOrg = 'ferustech'
-        name = 'ConfigKeys'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/FerusTech/ConfigKeys.git'
-        publish = true
-        version {
-            name = project.version
-            released = new Date()
-        }
-    }
-}
-
-publishing {
-    publications {
-        BintrayRelease(MavenPublication) {
-            from components.java
-            groupId group
-            artifactId archivesBaseName
-            version version
-            artifact javadocJar
-            artifact sourcesJar
-        }
-    }
 }
 
 build {
@@ -115,22 +107,53 @@ build {
     shadowJar.mustRunAfter sourcesJar
 }
 
-bintrayUpload {
-    dependsOn build
-
-    onlyIf { System.getenv("BINTRAY_USERNAME") }
-    onlyIf { System.getenv("BINTRAY_KEY") }
-    onlyIf { System.getenv("TRAVIS_BUILD_NUMBER") }
+signing {
+    required { System.getenv("SIGN_ID") && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
 }
 
-class Version {
-    String major, minor, revision
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
 
-    static String getBuild() {
-        System.getenv("TRAVIS_BUILD_NUMBER") ?: System.getProperty("TRAVIS_BUILD_NUMBER") ?: "DEV"
-    }
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
 
-    String toString() {
-        "${major}.${minor}.${revision}_" + getBuild()
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+                authentication(userName: sonatypeUsername, password:sonatypePassword)
+            }
+
+            pom.project {
+                name 'ConfigKeys'
+                packaging 'jar'
+                description 'ConfigKeys is a simple wrapper for zml\'s Configurate, providing a more stream-lined way to access configuration on-the-fly.'
+                url 'https://ferustech.github.com'
+
+                scm {
+                    url 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                    connection 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                    developerConnection 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'https://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'FerusGrim'
+                        name 'Nicholas Badger'
+                    }
+                }
+            }
+        }
     }
 }
