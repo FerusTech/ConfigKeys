@@ -29,35 +29,27 @@ public static String getVersion() {
 ```
 
 ## Download
-Latest Version: [![Download](https://api.bintray.com/packages/ferustech/maven/ConfigKeys/images/download.svg)](https://bintray.com/ferustech/maven/ConfigKeys/_latestVersion)
+Latest Version: [![Maven Central](https://img.shields.io/maven-central/v/tech.ferus.util/ConfigKeys.svg)]()
 
 Replace **VERSION** key below with latest version shown in button above.
 
-Maven
-```
+**Maven**
+```xml
 <dependency>
     <groupId>tech.ferus.util</groupId>
     <artifactId>ConfigKeys</artifactId>
     <version>VERSION</version>
 </dependency>
-
-<repository>
-    <id>ferustech-bintray</id>
-    <name>FerusTech-bintray</name>
-    <url>http://dl.bintray.com/ferustech/maven</url>
-</repository>
 ```
 
-Gradle
-```
-dependencies {
-    compile 'tech.ferus.util:ConfigKeys:VERSION'
+**Gradle**
+```groovy
+repositories {
+    mavenCentral()
 }
 
-repositories {
-    maven {
-        url  "http://dl.bintray.com/ferustech/maven" 
-    }
+dependencies {
+    compile 'tech.ferus.util:ConfigKeys:VERSION'
 }
 ```
 

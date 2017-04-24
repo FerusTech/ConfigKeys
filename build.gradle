@@ -34,7 +34,7 @@ apply plugin: "signing"
 apply plugin: "com.github.johnrengelman.shadow"
 
 group "tech.ferus.util"
-version = "1.0.2"
+version = "1.0.3-SNAPSHOT"
 description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
 archivesBaseName = "ConfigKeys"
 
