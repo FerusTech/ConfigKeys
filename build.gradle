@@ -34,7 +34,7 @@ apply plugin: "signing"
 apply plugin: "com.github.johnrengelman.shadow"
 
 group "tech.ferus.util"
-version = "1.0.3-SNAPSHOT"
+version = "1.0.3"
 description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
 archivesBaseName = "ConfigKeys"
 
@@ -47,11 +47,11 @@ repositories {
 
 dependencies {
     compile "com.google.code.findbugs:jsr305:3.0.2"
-    compile "ninja.leaping.configurate:configurate-core:3.2"
-    compile "ninja.leaping.configurate:configurate-gson:3.2"
-    compile "ninja.leaping.configurate:configurate-hocon:3.2"
-    compile "ninja.leaping.configurate:configurate-json:3.2"
-    compile "ninja.leaping.configurate:configurate-yaml:3.2"
+    compile "ninja.leaping.configurate:configurate-core:3.3"
+    compile "ninja.leaping.configurate:configurate-gson:3.3"
+    compile "ninja.leaping.configurate:configurate-hocon:3.3"
+    compile "ninja.leaping.configurate:configurate-json:3.3"
+    compile "ninja.leaping.configurate:configurate-yaml:3.3"
 }
 
 compileJava {
