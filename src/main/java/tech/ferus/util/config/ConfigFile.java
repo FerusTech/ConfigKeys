@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,9 +37,9 @@ import javax.annotation.Nullable;
 public class ConfigFile<T extends ConfigurationNode> {
 
     /**
-     * The default {@link ConfigFile}.
+     * The ConfigFile logger.
      */
-    @Nullable private static ConfigFile<? extends ConfigurationNode> defaultConfig = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigFile.class);
 
     /**
      * The location of the configuration file on disk.
@@ -52,7 +54,7 @@ public class ConfigFile<T extends ConfigurationNode> {
     /**
      * The loaded {@link ConfigurationNode} at the root level.
      */
-    @Nonnull private final T root;
+    @Nonnull private T root;
 
     /**
      * Constructs a new {@link ConfigFile}.
@@ -128,40 +130,52 @@ public class ConfigFile<T extends ConfigurationNode> {
     /**
      * Saves the root {@link ConfigurationNode} with the active {@link ConfigurationLoader}.
      *
-     * @throws IOException if the {@link ConfigurationNode} cannot be saved
+     * <p>Does not give exceptions upon failure.</p>
+     *
+     * @return true if save was successful; false otherwise
      */
-    public void save() throws IOException {
+    public boolean save() {
+        try {
+            this.loader.save(this.root);
+            return true;
+        } catch (final IOException e) {
+            LOGGER.error("Failed to save configuration file to \"{}\".", this.file.toString(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Saves the root {@link ConfigurationNode} with the active {@link ConfigurationLoader}.
+     *
+     * @throws IOException if {@link ConfigurationLoader#save(ConfigurationNode)} throws an exception
+     */
+    public void saveWithException() throws IOException {
         this.loader.save(this.root);
     }
 
     /**
-     * Sets the default {@link ConfigFile}
+     * Reloads the configuration from the {@link ConfigurationLoader}.
      *
-     * @param defaultConfig the {@link ConfigFile} to be set
-     * @param <T> the type of {@link ConfigurationNode}
+     * <p>Does not give exceptions upon failure.</p>
+     *
+     * @return true if reload was successful; false otherwise
      */
-    public static <T extends ConfigurationNode> void setDefaultConfig(@Nonnull final ConfigFile<T> defaultConfig) {
-        ConfigFile.defaultConfig = defaultConfig;
+    public boolean reload() {
+        try {
+            this.reloadWithException();
+            return true;
+        } catch (final IOException e) {
+            LOGGER.error("Failed to reload configuration for \"{}\".", this.file.toString(), e);
+            return false;
+        }
     }
 
     /**
-     * Gets the default {@link ConfigFile}.
+     * Reloads the configuration from the {@link ConfigurationLoader}.
      *
-     * @param <T> the type of {@link ConfigurationNode}
-     * @return the default {@link ConfigFile}
+     * @throws IOException if {@link ConfigurationLoader#load()} throws an exception
      */
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public static <T extends ConfigurationNode> ConfigFile<T> getDefaultConfig() {
-        return (ConfigFile<T>) ConfigFile.defaultConfig;
-    }
-
-    /**
-     * Determines whether or not a value has been set for the default {@link ConfigFile}.
-     *
-     * @return true if the default {@link ConfigFile} has been set
-     */
-    public static boolean isDefaultConfigSet() {
-        return ConfigFile.defaultConfig != null;
+    public void reloadWithException() throws IOException {
+        this.root = this.loader.load();
     }
 }

@@ -6,25 +6,10 @@ Using ConfigKeys is simple.
 
 ```java
 private static final ConfigKey<String> VERSION = ConfigKey.of("version");
+private static final HoconConfigFile CONFIG = HoconConfigFile.load(Paths.get("").resolve("config.conf"));
 
 public static String getVersion() {
-    HoconConfigFile config = HoconConfigFile.load(Paths.get("").resolve("config.conf"));
-    return VERSION.get(config);
-}
-```
-
-Alternatively, you could set your generated configuration as the default.
-
-```java
-private static final ConfigKey<String> VERSION = ConfigKey.of("version");
-
-static {
-    HoconConfigFile config = HoconConfigFile.load(Paths.get("").resolve("config.conf"));
-    ConfigFile.setDefaultConfig(config);
-}
-
-public static String getVersion() {
-    return VERSION.get();
+    return VERSION.get(CONFIG);
 }
 ```
 

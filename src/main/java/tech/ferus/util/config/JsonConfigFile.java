@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.json.JSONConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +35,11 @@ import javax.annotation.Nullable;
  * An implementation of {@link ConfigFile} for the JSON specification.
  */
 public class JsonConfigFile extends ConfigFile<ConfigurationNode> {
+
+    /**
+     * The JsonConfigFile logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonConfigFile.class);
 
     /**
      * Constructs a new {@link JsonConfigFile}.
@@ -55,7 +62,7 @@ public class JsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static JsonConfigFile load(final Path file) throws IOException {
-        return load(file, null, false, false);
+        return load(file, null, false);
     }
 
     /**
@@ -69,8 +76,8 @@ public class JsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static JsonConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource) throws IOException {
-        return load(file, resource, false, true);
+                                      @Nonnull final String resource) throws IOException {
+        return load(file, resource, false);
     }
 
     /**
@@ -87,9 +94,41 @@ public class JsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static JsonConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource,
-                                       final boolean overwrite) throws IOException {
-        return load(file, resource, overwrite, true);
+                                      @Nullable final String resource,
+                                      final boolean overwrite) throws IOException {
+        if (overwrite) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (final IOException e) {
+                LOGGER.error("Failed to delete file: {}", file.toString(), e);
+            }
+        }
+
+        if (!Files.exists(file)) {
+            try {
+                Files.createDirectories(file.getParent());
+            } catch (final IOException e) {
+                LOGGER.error("Failed to create parent directories of: {}", file.toString(), e);
+            }
+
+            if (resource != null && !resource.isEmpty()) {
+                try {
+                    Files.copy(JsonConfigFile.class.getResourceAsStream(resource), file);
+                } catch (final IOException e) {
+                    LOGGER.error("Failed to copy resource to: {}", file.toString(), e);
+                }
+            }
+        }
+
+        final JSONConfigurationLoader loader = JSONConfigurationLoader.builder().setPath(file).build();
+
+        try {
+            return new JsonConfigFile(file, loader, loader.load());
+        } catch (final IOException e) {
+            LOGGER.error("Failed to load configuration file at: {}", file.toString(), e);
+        }
+
+        return null;
     }
 
     /**
@@ -110,10 +149,11 @@ public class JsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @return a new {@link JsonConfigFile}
      * @throws IOException if files cannot be properly deleted/created
      */
+    @Deprecated
     public static JsonConfigFile load(@Nonnull final Path file,
-                                       @Nullable final String resource,
-                                       final boolean overwrite,
-                                       final boolean merge) throws IOException {
+                                      @Nullable final String resource,
+                                      final boolean overwrite,
+                                      final boolean merge) throws IOException {
         if (overwrite) {
             Files.deleteIfExists(file);
         }

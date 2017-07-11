@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +35,11 @@ import javax.annotation.Nullable;
  * An implementation of {@link ConfigFile} for the GSON specification.
  */
 public class GsonConfigFile extends ConfigFile<ConfigurationNode> {
+
+    /**
+     * The GsonConfigFile logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(GsonConfigFile.class);
 
     /**
      * Constructs a new {@link GsonConfigFile}.
@@ -55,7 +62,7 @@ public class GsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static GsonConfigFile load(final Path file) throws IOException {
-        return load(file, null, false, false);
+        return load(file, null, false);
     }
 
     /**
@@ -69,14 +76,12 @@ public class GsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static GsonConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource) throws IOException {
-        return load(file, resource, false, true);
+                                      @Nonnull final String resource) throws IOException {
+        return load(file, resource, false);
     }
 
     /**
      * Creates a {@link GsonConfigFile}.
-     *
-     * <p>Also merges a configuration file from the classpath into the file on disk.</p>
      *
      * <p>May delete file on disk before copying resource.</p>
      *
@@ -87,9 +92,41 @@ public class GsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static GsonConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource,
-                                       final boolean overwrite) throws IOException {
-        return load(file, resource, overwrite, true);
+                                      @Nullable final String resource,
+                                      final boolean overwrite) throws IOException {
+        if (overwrite) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (final IOException e) {
+                LOGGER.error("Failed to delete file: {}", file.toString(), e);
+            }
+        }
+
+        if (!Files.exists(file)) {
+            try {
+                Files.createDirectories(file.getParent());
+            } catch (final IOException e) {
+                LOGGER.error("Failed to create parent directories of: {}", file.toString(), e);
+            }
+
+            if (resource != null && !resource.isEmpty()) {
+                try {
+                    Files.copy(GsonConfigFile.class.getResourceAsStream(resource), file);
+                } catch (final IOException e) {
+                    LOGGER.error("Failed to copy resource to: {}", file.toString(), e);
+                }
+            }
+        }
+
+        final GsonConfigurationLoader loader = GsonConfigurationLoader.builder().setPath(file).build();
+
+        try {
+            return new GsonConfigFile(file, loader, loader.load());
+        } catch (final IOException e) {
+            LOGGER.error("Failed to load configuration file at: {}", file.toString(), e);
+        }
+
+        return null;
     }
 
     /**
@@ -110,10 +147,11 @@ public class GsonConfigFile extends ConfigFile<ConfigurationNode> {
      * @return a new {@link GsonConfigFile}
      * @throws IOException if files cannot be properly deleted/created
      */
+    @Deprecated
     public static GsonConfigFile load(@Nonnull final Path file,
-                                       @Nullable final String resource,
-                                       final boolean overwrite,
-                                       final boolean merge) throws IOException {
+                                      @Nullable final String resource,
+                                      final boolean overwrite,
+                                      final boolean merge) throws IOException {
         if (overwrite) {
             Files.deleteIfExists(file);
         }

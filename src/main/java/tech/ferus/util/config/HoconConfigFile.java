@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +35,11 @@ import javax.annotation.Nullable;
  * An implementation of {@link ConfigFile} for the HOCON specification.
  */
 public class HoconConfigFile extends ConfigFile<CommentedConfigurationNode> {
+
+    /**
+     * The HoconConfigFile logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(HoconConfigFile.class);
 
     /**
      * Constructs a new {@link HoconConfigFile}.
@@ -76,7 +83,7 @@ public class HoconConfigFile extends ConfigFile<CommentedConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static HoconConfigFile load(final Path file) throws IOException {
-        return load(file, null, false, false);
+        return load(file, null, false);
     }
 
     /**
@@ -90,8 +97,8 @@ public class HoconConfigFile extends ConfigFile<CommentedConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static HoconConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource) throws IOException {
-        return load(file, resource, false, true);
+                                       @Nullable final String resource) throws IOException {
+        return load(file, resource, false);
     }
 
     /**
@@ -108,9 +115,41 @@ public class HoconConfigFile extends ConfigFile<CommentedConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static HoconConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource,
+                                       @Nullable final String resource,
                                        final boolean overwrite) throws IOException {
-        return load(file, resource, overwrite, true);
+        if (overwrite) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (final IOException e) {
+                LOGGER.error("Failed to delete file: {}", file.toString(), e);
+            }
+        }
+
+        if (!Files.exists(file)) {
+            try {
+                Files.createDirectories(file.getParent());
+            } catch (final IOException e) {
+                LOGGER.error("Failed to create parent directories of: {}", file.toString(), e);
+            }
+
+            if (resource != null && !resource.isEmpty()) {
+                try {
+                    Files.copy(HoconConfigFile.class.getResourceAsStream(resource), file);
+                } catch (final IOException e) {
+                    LOGGER.error("Failed to copy resource to: {}", file.toString(), e);
+                }
+            }
+        }
+
+        final HoconConfigurationLoader loader = HoconConfigurationLoader.builder().setPath(file).build();
+
+        try {
+            return new HoconConfigFile(file, loader, loader.load());
+        } catch (final IOException e) {
+            LOGGER.error("Failed to load configuration file at: {}", file.toString(), e);
+        }
+
+        return null;
     }
 
     /**
@@ -131,6 +170,7 @@ public class HoconConfigFile extends ConfigFile<CommentedConfigurationNode> {
      * @return a new {@link HoconConfigFile}
      * @throws IOException if files cannot be properly deleted/created
      */
+    @Deprecated
     public static HoconConfigFile load(@Nonnull final Path file,
                                        @Nullable final String resource,
                                        final boolean overwrite,

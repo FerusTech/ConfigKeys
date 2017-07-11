@@ -23,8 +23,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +36,11 @@ import javax.annotation.Nullable;
  * An implementation of {@link ConfigFile} for the YAML specification.
  */
 public class YamlConfigFile extends ConfigFile<ConfigurationNode> {
+
+    /**
+     * The YamlConfigFile logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(YamlConfigFile.class);
 
     /**
      * Constructs a new {@link YamlConfigFile}.
@@ -55,7 +63,7 @@ public class YamlConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static YamlConfigFile load(final Path file) throws IOException {
-        return load(file, null, false, false);
+        return load(file, null, false);
     }
 
     /**
@@ -69,8 +77,8 @@ public class YamlConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static YamlConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource) throws IOException {
-        return load(file, resource, false, true);
+                                      @Nonnull final String resource) throws IOException {
+        return load(file, resource, false);
     }
 
     /**
@@ -87,9 +95,41 @@ public class YamlConfigFile extends ConfigFile<ConfigurationNode> {
      * @throws IOException if files cannot be properly deleted/created
      */
     public static YamlConfigFile load(@Nonnull final Path file,
-                                       @Nonnull final String resource,
-                                       final boolean overwrite) throws IOException {
-        return load(file, resource, overwrite, true);
+                                      @Nullable final String resource,
+                                      final boolean overwrite) throws IOException {
+        if (overwrite) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (final IOException e) {
+                LOGGER.error("Failed to delete file: {}", file.toString(), e);
+            }
+        }
+
+        if (!Files.exists(file)) {
+            try {
+                Files.createDirectories(file.getParent());
+            } catch (final IOException e) {
+                LOGGER.error("Failed to create parent directories of: {}", file.toString(), e);
+            }
+
+            if (resource != null && !resource.isEmpty()) {
+                try {
+                    Files.copy(YamlConfigFile.class.getResourceAsStream(resource), file);
+                } catch (final IOException e) {
+                    LOGGER.error("Failed to copy resource to: {}", file.toString(), e);
+                }
+            }
+        }
+
+        final YAMLConfigurationLoader loader = YAMLConfigurationLoader.builder().setPath(file).build();
+
+        try {
+            return new YamlConfigFile(file, loader, loader.load());
+        } catch (final IOException e) {
+            LOGGER.error("Failed to load configuration file at: {}", file.toString(), e);
+        }
+
+        return null;
     }
 
     /**
@@ -110,10 +150,11 @@ public class YamlConfigFile extends ConfigFile<ConfigurationNode> {
      * @return a new {@link YamlConfigFile}
      * @throws IOException if files cannot be properly deleted/created
      */
+    @Deprecated
     public static YamlConfigFile load(@Nonnull final Path file,
-                                       @Nullable final String resource,
-                                       final boolean overwrite,
-                                       final boolean merge) throws IOException {
+                                      @Nullable final String resource,
+                                      final boolean overwrite,
+                                      final boolean merge) throws IOException {
         if (overwrite) {
             Files.deleteIfExists(file);
         }
