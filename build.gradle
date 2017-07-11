@@ -47,6 +47,7 @@ repositories {
 
 dependencies {
     compile "com.google.code.findbugs:jsr305:3.0.2"
+    compile "org.slf4j:slf4j-api:1.7.25"
     compile "ninja.leaping.configurate:configurate-core:3.3"
     compile "ninja.leaping.configurate:configurate-gson:3.3"
     compile "ninja.leaping.configurate:configurate-hocon:3.3"
