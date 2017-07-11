@@ -157,6 +157,7 @@ gradle-app.setting
 
 ## Custom ##
 run/
+*.iml
 .idea/
 
 ## Suck My Dick Windows ##

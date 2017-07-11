@@ -22,6 +22,7 @@ package tech.ferus.util.config;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.ferus.util.config.transformer.Transformer;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,20 +45,17 @@ public class ConfigKey<T> {
     /**
      * The path from root to node.
      */
-    @Nonnull private final Object[] key;
+    @Nonnull private final String[] key;
 
+    /**
+     * The default value to be returned if all else fails.
+     */
     @Nullable private final T def;
 
     /**
-     * Constructs a new {@link ConfigKey}.
-     *
-     * <p>Note: Default value will be null.</p>
-     *
-     * @param key the path to the node on any level
+     * The transformer to convert non-simple values.
      */
-    private ConfigKey(@Nonnull final Object[] key) {
-        this(key, null);
-    }
+    @Nullable private final Transformer<T> transformer;
 
     /**
      * Constructs a new {@link ConfigKey}.
@@ -65,9 +63,21 @@ public class ConfigKey<T> {
      * @param key the path to the node on any level
      * @param def the default value to be returned if an existing value cannot be obtained
      */
-    private ConfigKey(@Nonnull final Object[] key, @Nullable final T def) {
+    private ConfigKey(@Nonnull final String[] key, @Nullable final T def) {
+        this(key, def, null);
+    }
+
+    /**
+     * Constructs a new {@link ConfigKey}.
+     *
+     * @param key the path to the node on any level
+     * @param def the default value to be returned if an existing value cannot be obtained
+     * @param transformer the transformer to convert non-simple values.
+     */
+    private ConfigKey(@Nonnull final String[] key, @Nullable final T def, @Nullable final Transformer<T> transformer) {
         this.key = key;
         this.def = def;
+        this.transformer = transformer;
     }
 
     /**
@@ -108,9 +118,7 @@ public class ConfigKey<T> {
      * @param def the default value to be returned if an existing value cannot be obtained
      * @return the value stored in configuration for this key, or default
      */
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public T get(@Nonnull final ConfigFile config, @Nullable final T def) {
+    @Nullable public T get(@Nonnull final ConfigFile config, @Nullable final T def) {
         return this.get(config.getNode(), def);
     }
 
@@ -128,7 +136,17 @@ public class ConfigKey<T> {
     @Nullable
     public T get(@Nonnull final ConfigurationNode node, @Nullable final T def) {
         try {
-            return (T) node.getNode((Object[]) this.key).getValue(def);
+            final ConfigurationNode get = node.getNode((Object[]) this.key);
+            if (transformer != null) {
+                try {
+                    return transformer.transform(get);
+                } catch (final IllegalArgumentException e) {
+                    LOGGER.error("Failed to transform node \"{}\"!", this.key, e);
+                    return def;
+                }
+            }
+
+            return (T) get.getValue();
         } catch (final ClassCastException e) {
             LOGGER.error("Improper value type for \"{}\"!", this.key, e);
             return def;
@@ -195,41 +213,13 @@ public class ConfigKey<T> {
      * <p>The purpose of this method is purely to reduce
      * <code>new ConfigKey(new Object[]{"string"});</code> to <code>ConfigKey.of("string");</code>.</p>
      *
-     * @param key the path to the node on the top level
-     * @param <T> the type of object that the {@link ConfigKey} should reference
-     * @return a new {@link ConfigKey} with the specified path
-     */
-    public static <T> ConfigKey<T> of(final Object key) {
-        return new ConfigKey<>(new Object[]{key});
-    }
-
-    /**
-     * Convenience method to construct a new {@link ConfigKey}.
-     *
-     * <p>The purpose of this method is purely to reduce
-     * <code>new ConfigKey(new Object[]{"string"});</code> to <code>ConfigKey.of("string");</code>.</p>
-     *
-     * @param key the path to the node on any level
-     * @param <T> the type of object that the {@link ConfigKey} should reference
-     * @return a new {@link ConfigKey} with the specified path
-     */
-    public static <T> ConfigKey<T> of(final Object... key) {
-        return new ConfigKey<>(key);
-    }
-
-    /**
-     * Convenience method to construct a new {@link ConfigKey}.
-     *
-     * <p>The purpose of this method is purely to reduce
-     * <code>new ConfigKey(new Object[]{"string"});</code> to <code>ConfigKey.of("string");</code>.</p>
-     *
      * @param def the default value for this key
      * @param key the path to the node on the top level
      * @param <T> the type of object that the {@link ConfigKey} should reference
      * @return a new {@link ConfigKey} with the specified path
      */
-    public static <T> ConfigKey<T> of(final T def, final Object key) {
-        return new ConfigKey<>(new Object[]{key}, def);
+    public static <T> ConfigKey<T> of(final T def, final String key) {
+        return new ConfigKey<>(new String[] { key }, def);
     }
 
     /**
@@ -243,7 +233,23 @@ public class ConfigKey<T> {
      * @param <T> the type of object that the {@link ConfigKey} should reference
      * @return a new {@link ConfigKey} with the specified path
      */
-    public static <T> ConfigKey<T> of(final T def, final Object... key) {
+    public static <T> ConfigKey<T> of(final T def, final String... key) {
         return new ConfigKey<>(key, def);
+    }
+
+    /**
+     * Convenience method to construct a new {@link ConfigKey}.
+     *
+     * <p>The purpose of this method is purely to reduce
+     * <code>new ConfigKey(new Object[]{"string"});</code> to <code>ConfigKey.of("string");</code>.</p>
+     *
+     * @param def the default value for this key
+     * @param transformer the transformer to convert non-simple values
+     * @param key the path to the node on any level
+     * @param <T> the type of object that the {@link ConfigKey} should reference
+     * @return a new {@link ConfigKey} with the specified path
+     */
+    public static <T> ConfigKey<T> of(final T def, final Transformer<T> transformer, String... key) {
+        return new ConfigKey<>(key, def, transformer);
     }
 }
