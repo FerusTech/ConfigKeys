@@ -19,6 +19,7 @@
 
 package tech.ferus.util.config;
 
+import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,21 @@ public class ConfigKey<T> {
      * @return the value stored in configuration for this key
      */
     @Nullable public T get(@Nonnull final ConfigFile config) {
-        return this.get(config, this.def);
+        return this.get(config.getNode(), this.def);
+    }
+
+    /**
+     * Returns the value stored in configuration for this key.
+     *
+     * <p>If the path doesn't exist, there is no value, or an
+     * exception occurs, the default value for this {@link ConfigKey}
+     * will be returned.</p>
+     *
+     * @param node the {@link ConfigurationNode} to look through
+     * @return the value stored in configuration for this key
+     */
+    @Nullable public T get(@Nonnull final ConfigurationNode node) {
+        return this.get(node, this.def);
     }
 
     /**
@@ -96,8 +111,24 @@ public class ConfigKey<T> {
     @SuppressWarnings("unchecked")
     @Nullable
     public T get(@Nonnull final ConfigFile config, @Nullable final T def) {
+        return this.get(config.getNode(), def);
+    }
+
+    /**
+     * Returns the value stored in configuration this key.
+     *
+     * <p>Note: If this ConfigKey has a default value set,
+     * this method will ignore it and use the provided default value.</p>
+     *
+     * @param node the {@link ConfigurationNode} to look through
+     * @param def the default value to be returned if an existing value cannot be obtained
+     * @return the value stored in configuration for this key, or default
+     */
+    @SuppressWarnings("unchecked")
+    @Nullable
+    public T get(@Nonnull final ConfigurationNode node, @Nullable final T def) {
         try {
-            return (T) config.getNode((Object[]) this.key).getValue(def);
+            return (T) node.getNode((Object[]) this.key).getValue(def);
         } catch (final ClassCastException e) {
             LOGGER.error("Improper value type for \"{}\"!", this.key, e);
             return def;
@@ -116,7 +147,7 @@ public class ConfigKey<T> {
             throw new IllegalStateException("Attempted to set \"" + String.join(".", Arrays.toString(this.key)) + "\" to a null ConfigFile.");
         }
 
-        config.getNode(this.key).setValue(value);
+        this.set(config.getNode(), value);
         config.saveWithException();
     }
 
@@ -144,6 +175,18 @@ public class ConfigKey<T> {
                     config.getFile().toString(), e);
             return false;
         }
+    }
+
+    /**
+     * Sets a value for the node located at the path for this key.
+     *
+     * <p>Does NOT save.</p>
+     *
+     * @param node the {@link ConfigurationNode} to set.
+     * @param value the value to change the node to
+     */
+    public void set(@Nonnull final ConfigurationNode node, @Nullable final T value) {
+        node.setValue(value);
     }
 
     /**
