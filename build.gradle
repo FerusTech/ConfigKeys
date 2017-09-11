@@ -24,8 +24,6 @@ ext {
     buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildDateTime)
     buildCreatedBy = "${System.properties["java.version"]} (${System.properties["java.vendor"]} ${System.properties["java.vm.version"]})".toString()
 
-    gitBranch = versioning.info.branch
-
     final String[] split = gitBranch.split("/")
     split[0] = split[0].toUpperCase()
 
