@@ -18,11 +18,11 @@ uploadArchives {
                 MavenDeployment deployment -> signing.signPom(deployment)
             }
 
-            repository(url: "https://nexus.corinthmc.com/repository/maven-releases-private/") {
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
                 authentication(userName: nexusUsername, password: nexusPassword)
             }
 
-            snapshotRepository(url: "https://nexus.corinthmc.com/repository/maven-snapshots-private/") {
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
                 authentication(userName: nexusUsername, password: nexusPassword)
             }
 
