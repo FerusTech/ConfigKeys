@@ -7,7 +7,7 @@ jdk:
   - oraclejdk8
 
 install: true
-script: ./gradlew build upload --stracktrace -PdoArtifactUpdate=true
+script: ./gradlew build upload -PdoArtifactUpdate=true
 
 before_cache:
   - rm -rf $HOME/.gradle/caches/modules-2/modules-2.lock
