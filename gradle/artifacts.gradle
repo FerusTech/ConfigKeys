@@ -1,0 +1,91 @@
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava {
+    options.encoding = "UTF-8"
+}
+
+jar {
+    manifest {
+        attributes(
+                // Build Data
+                "Build": gitHashShort,
+                "Built-By": buildBy,
+                "Created-By": buildCreatedBy,
+                "Build-Date": buildDate,
+                "Build-Time": buildTime,
+                "Build-Revision": gitHash,
+                "Build-Branch": gitBranch,
+
+                // Vendor Data
+                "Specification-Title": project.name,
+                "Specification-Version": project.version,
+                "Specification-Vendor": "https://corinthmc.com",
+                "Implementation-Title": project.name,
+                "Implementation-Version": project.version,
+                "Implementation-Vendor": "https://corinthmc.com"
+        )
+    }
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        options.addStringOption("Xdoclint:none", "-quiet")
+    }
+}
+
+task sourcesJar(type: Jar) {
+    group 'Build'
+    description 'An archive of the source code'
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+    group 'Build'
+    description 'An archive of the Javadocs'
+    classifier 'javadoc'
+    from javadoc.destinationDir
+}
+
+javadoc {
+    excludes = ["META-INF/**"]
+
+    options.addBooleanOption("javafx", true)
+
+    options.use = true
+    options.splitIndex = true
+    options.encoding = "UTF-8"
+    options.author = true
+    options.version = true
+    options.windowTitle = "$project.name $version Java Documentation"
+    options.docTitle = "$project.name $version Java Documentation"
+    options.links = [
+            "http://www.slf4j.org/apidocs/",
+            "http://docs.oracle.com/javase/8/docs/api/"
+    ]
+}
+
+shadowJar {
+    classifier = "shaded"
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+    archives shadowJar
+}
+
+build {
+    dependsOn clean
+    dependsOn jar
+    dependsOn javadocJar
+    dependsOn sourcesJar
+    dependsOn shadowJar
+
+    jar.mustRunAfter clean
+    javadocJar.mustRunAfter jar
+    sourcesJar.mustRunAfter javadocJar
+    shadowJar.mustRunAfter sourcesJar
+}
