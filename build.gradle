@@ -33,7 +33,7 @@ ext {
     gitHashShort = versioning.info.build
 }
 
-group = "com.corinthmc"
+group = "tech.ferus"
 version = "4.0.0" + (gitBranch == "master" ? "" : gitBranch == "develop" ? "-SNAPSHOT" : "-" + gitBranchStripped + "-SNAPSHOT")
 description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
 
