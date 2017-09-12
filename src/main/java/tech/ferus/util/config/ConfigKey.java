@@ -158,22 +158,6 @@ public class ConfigKey<T> {
      *
      * @param config the {@link ConfigFile} to save to
      * @param value the value to change the node to
-     * @throws IOException if the configuration file cannot be saved to
-     */
-    public void setWithException(@Nullable final ConfigFile config, @Nullable final T value) throws IOException {
-        if (config == null) {
-            throw new IllegalStateException("Attempted to set \"" + String.join(".", Arrays.toString(this.key)) + "\" to a null ConfigFile.");
-        }
-
-        this.set(config.getNode(), value);
-        config.saveWithException();
-    }
-
-    /**
-     * Sets and saves a value for the node located at the path for this key.
-     *
-     * @param config the {@link ConfigFile} to save to
-     * @param value the value to change the node to
      * @return true if the configuration was saved; false otherwise
      */
     public boolean set(@Nullable final ConfigFile config, @Nullable final T value) {
@@ -185,7 +169,8 @@ public class ConfigKey<T> {
         }
 
         try {
-            this.setWithException(config, value);
+            this.set(config.getNode(), value);
+            config.save();
             return true;
         } catch (final IOException e) {
             LOGGER.error("Failed to set \"{}\" to \"{}\".",
@@ -204,7 +189,7 @@ public class ConfigKey<T> {
      * @param value the value to change the node to
      */
     public void set(@Nonnull final ConfigurationNode node, @Nullable final T value) {
-        node.setValue(value);
+        node.getNode((Object[]) this.key).setValue(value);
     }
 
     /**
