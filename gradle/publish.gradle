@@ -9,6 +9,10 @@ apply plugin: "maven"
 apply plugin: "maven-publish"
 apply plugin: "signing"
 
+signing {
+    sign configurations.archives
+}
+
 final String nexusUsername = System.getenv("SON_USR") ? System.getenv("SON_USR") : "NOT_CONFIGURED"
 final String nexusPassword = System.getenv("SON_PAS") ? System.getenv("SON_PAS") : "NOT_CONFIGURED"
 uploadArchives {
