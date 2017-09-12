@@ -1,45 +1,50 @@
+import java.text.SimpleDateFormat
+
 buildscript {
     repositories {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        jcenter()
     }
 
     dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:1.2.4"
+        classpath "gradle.plugin.ninja.miserable:blossom:1.0.1"
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.0"
+        classpath "net.nemerosa:versioning:2.0.0"
     }
 }
 
-def gitHash = getGitHash()
-def doSigning = false
-def uploadUsername = System.getenv("SON_USR") ? System.getenv("SON_USR") : "Not_Configured"
-def uploadPassword = System.getenv("SON_PAS") ? System.getenv("SON_PAS") : "Not_Configured"
+apply plugin: "net.nemerosa.versioning"
 
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.allTasks.any { it instanceof Upload }) {
-        doSigning = true
-        uploadUsername = System.getenv("SON_USR") ? System.getenv("SON_USR") : "Not_Configured"
-        uploadPassword = ""
+final Date buildDateTime = new Date()
+ext {
+    buildBy = System.properties['user.name']
+    buildDate = new SimpleDateFormat('yyyy-MM-dd').format(buildDateTime)
+    buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildDateTime)
+    buildCreatedBy = "${System.properties["java.version"]} (${System.properties["java.vendor"]} ${System.properties["java.vm.version"]})".toString()
 
-        project.ext."signing.keyId" = System.getenv("SIGN_ID") ? System.getenv("SIGN_ID") : "Not_Configured"
-        project.ext."signing.secretKeyRingFile" = "secring.gpg"
-        project.ext."signing.password" = System.getenv("SIGN_PASS") ? System.getenv("SIGN_PASS") : "Not_Configured"
-    }
+    final String[] split = gitBranch.split("/")
+    split[0] = split[0].toUpperCase()
+
+    gitBranchStripped = split.join("-")
+
+    gitHash = versioning.info.commit
+    gitHashShort = versioning.info.build
 }
+
+group = "tech.ferus"
+version = "4.0.0" + (gitBranch == "master" ? "" : gitBranch == "develop" ? "-SNAPSHOT" : "-" + gitBranchStripped + "-SNAPSHOT")
+description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
 
 apply plugin: "java"
 apply plugin: "idea"
-apply plugin: "maven"
-apply plugin: "signing"
+apply plugin: "eclipse"
 apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: "ninja.miserable.blossom"
 
-group "tech.ferus.util"
-version = "3.0.0"
-description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
-archivesBaseName = "ConfigKeys"
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+apply from: file("gradle/artifacts.gradle")
+apply from: file("gradle/publish.gradle")
 
 repositories {
     mavenCentral()
@@ -55,119 +60,7 @@ dependencies {
     compile "ninja.leaping.configurate:configurate-yaml:3.3"
 }
 
-compileJava {
-    options.encoding = 'UTF-8'
-}
-
-jar {
-    manifest {
-        attributes(
-                'Implementation-Title': project.name,
-                'Implementation-Version': version,
-                'Build-Version': gitHash
-        )
-    }
-}
-
-shadowJar {
-    classifier = "shaded"
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-javadoc {
-    failOnError = false
-    source = sourceSets.main.allJava
-    classpath = configurations.compile
-    options.memberLevel = JavadocMemberLevel.PRIVATE
-}
-
-artifacts {
-    archives jar
-    archives sourcesJar
-    archives javadocJar
-    archives shadowJar
-}
-
-signing {
-    required { doSigning }
-    sign configurations.archives
-}
-
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment {
-                MavenDeployment deployment -> signing.signPom(deployment)
-            }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
-                authentication(userName: uploadUsername, password: uploadPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
-                authentication(userName: uploadUsername, password: uploadPassword)
-            }
-
-            pom.project {
-                name project.name
-                packaging 'jar'
-                description project.description
-                url 'https://github.com/ferustech'
-
-                scm {
-                    url 'scm:git@github.com:FerusTech/ConfigKeys.git'
-                    connection 'scm:git@github.com:FerusTech/ConfigKeys.git'
-                    developerConnection 'scm:git@github.com:FerusTech/ConfigKeys.git'
-                }
-
-                licenses {
-                    license {
-                        name 'The MIT License'
-                        url 'https://opensource.org/licenses/MIT'
-                        distribution 'repo'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'FerusGrim'
-                        name 'Nicholas Badger'
-                    }
-                }
-            }
-        }
-    }
-}
-
-build {
-    dependsOn jar
-    dependsOn javadocJar
-    dependsOn sourcesJar
-
-    jar.mustRunAfter clean
-    javadocJar.mustRunAfter jar
-    sourcesJar.mustRunAfter javadocJar
-    shadowJar.mustRunAfter sourcesJar
-}
-
-
-private static String getGitHash() {
-    def process = "git rev-parse --short HEAD".execute()
-    process.waitFor()
-    return process.exitValue() ? 'unknown' : process.text.trim()
-}
-
 task wrapper(type: Wrapper) {
-    gradleVersion = "3.2.1"
+    gradleVersion = "3.5"
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }

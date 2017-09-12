@@ -1,0 +1,58 @@
+// -PdoArtifactUpdate=<true/false>
+if (!project.hasProperty("doArtifactUpdate") || !doArtifactUpdate) return
+
+project.ext."signing.keyId" = System.getenv("SIGN_ID") ? System.getenv("SIGN_ID") : "NOT_CONFIGURED"
+project.ext."signing.secretKeyRingFile" = "secring.gpg"
+project.ext."signing.password" = System.getenv("SIGN_PASS") ? System.getenv("SIGN_PASS") : "NOT_CONFIGURED"
+
+apply plugin: "maven"
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+final String nexusUsername = System.getenv("SON_USR") ? System.getenv("SON_USR") : "NOT_CONFIGURED"
+final String nexusPassword = System.getenv("SON_PAS") ? System.getenv("SON_PAS") : "NOT_CONFIGURED"
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment {
+                MavenDeployment deployment -> signing.signPom(deployment)
+            }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            pom.project {
+                name project.name
+                packaging 'jar'
+                description project.description
+                url 'https://github.com/FerusTech'
+
+                scm {
+                    url 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                    connection 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                    developerConnection 'scm:git@github.com:FerusTech/ConfigKeys.git'
+                }
+                
+                licenses {
+                    license {
+                        name 'The MIT License'
+                        url 'https://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'FerusGrim'
+                        name 'Nicholas Badger'
+                    }
+                }
+            }
+        }
+    }
+}

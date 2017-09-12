@@ -6,6 +6,7 @@
  *         <li>{@link tech.ferus.util.config.transformer.ListTransformer}</li>
  *         <li>{@link tech.ferus.util.config.transformer.SetTransformer}</li>
  *         <li>{@link tech.ferus.util.config.transformer.MapTransformer}</li>
+ *         <li>{@link tech.ferus.util.config.transformer.NodeTransformer}</li>
  *     </ul>
  */
 package tech.ferus.util.config.transformer;

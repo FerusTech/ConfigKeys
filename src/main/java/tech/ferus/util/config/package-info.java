@@ -19,13 +19,5 @@
 
 /**
  * Root package for ConfigKeys.
- *
- * <p>Different types of ConfigFiles:
- * <ul>
- *     <li>{@link tech.ferus.util.config.GsonConfigFile}</li>
- *     <li>{@link tech.ferus.util.config.HoconConfigFile}</li>
- *     <li>{@link tech.ferus.util.config.JsonConfigFile}</li>
- *     <li>{@link tech.ferus.util.config.YamlConfigFile}</li>
- * </ul>
  */
 package tech.ferus.util.config;

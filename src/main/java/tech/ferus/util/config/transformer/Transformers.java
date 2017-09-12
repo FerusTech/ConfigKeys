@@ -12,6 +12,7 @@ public final class Transformers {
     public static final ListTransformer<Float> FLOAT_LIST = new ListTransformer<>();
     public static final ListTransformer<Double> DOUBLE_LIST = new ListTransformer<>();
     public static final ListTransformer<Long> LONG_LIST = new ListTransformer<>();
+    public static final ListTransformer<Object> OBJECT_LIST = new ListTransformer<>();
 
     // Basic Set Transformers
     public static final SetTransformer<String> STRING_SET = new SetTransformer<>();
@@ -20,6 +21,7 @@ public final class Transformers {
     public static final SetTransformer<Float> FLOAT_SET = new SetTransformer<>();
     public static final SetTransformer<Double> DOUBLE_SET = new SetTransformer<>();
     public static final SetTransformer<Long> LONG_SET = new SetTransformer<>();
+    public static final SetTransformer<Object> OBJECT_SET = new SetTransformer<>();
 
     // Basic Map Transformers
     public static final MapTransformer<String, String> STRING_MAP = new MapTransformer<>();
@@ -28,4 +30,8 @@ public final class Transformers {
     public static final MapTransformer<String, Float> FLOAT_MAP = new MapTransformer<>();
     public static final MapTransformer<String, Double> DOUBLE_MAP = new MapTransformer<>();
     public static final MapTransformer<String, Long> LONG_MAP = new MapTransformer<>();
+    public static final MapTransformer<String, Object> OBJECT_MAP = new MapTransformer<>();
+
+    // Direct Return Transformer
+    public static final NodeTransformer NODE_TRANSFORMER = new NodeTransformer();
 }
