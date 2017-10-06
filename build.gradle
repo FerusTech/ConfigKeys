@@ -34,7 +34,7 @@ ext {
 }
 
 group = "tech.ferus"
-version = "4.0.1" + (gitBranch == "master" ? "" : gitBranch == "develop" ? "-SNAPSHOT" : "-" + gitBranchStripped + "-SNAPSHOT")
+version = "5.1.0" + (gitBranch == "master" ? "" : gitBranch == "develop" ? "-SNAPSHOT" : "-" + gitBranchStripped + "-SNAPSHOT")
 description = "ConfigKeys is a simple wrapper for zml's Configurate, providing a more stream-lined way to access configuration on-the-fly."
 
 apply plugin: "java"
