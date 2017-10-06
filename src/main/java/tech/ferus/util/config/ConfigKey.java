@@ -43,7 +43,7 @@ public class ConfigKey<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigKey.class);
 
     /**
-     * The path from root to node.
+     * The path from root to node. May be relative.
      */
     @Nonnull private final String[] key;
 
@@ -78,6 +78,30 @@ public class ConfigKey<T> {
         this.key = key;
         this.def = def;
         this.transformer = transformer;
+    }
+
+    /**
+     * Gets the path from root to node.
+     *
+     * <p>Note that keys can be used to obtain relative
+     * paths and aren't always intended to lead directly
+     * back to the root node.</p>
+     *
+     * @return the path from root to node
+     */
+    @Nonnull
+    public String[] getKey() {
+        return this.key;
+    }
+
+    /**
+     * Gets the value that's returned if a value cannot be retrieved.
+     *
+     * @return the default value to be returned as a fallback
+     */
+    @Nullable
+    public T getDef() {
+        return this.def;
     }
 
     /**
